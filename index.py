@@ -1,15 +1,14 @@
 
 import numpy as np
-import argparse
 import cv2
-from IPython.display import Image
-import matplotlib.pyplot as plt
+from playsound import playsound
+import datetime
 
 threshold = -0.35
 def isolate_red (frame, red_threshold):
 
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-# red color boundary
+        # red color boundary
         # Define red hue ranges
     lower_red1 = np.array([0, 100, 100])
     upper_red1 = np.array([10, 255, 255])
@@ -19,7 +18,6 @@ def isolate_red (frame, red_threshold):
     mask1 = cv2.inRange(frame, lower_red1, upper_red1)
     mask2 = cv2.inRange(frame, lower_red2, upper_red2)    
     
-    # img = cv2.bitwise_and(my_image, my_image, mask = mask)
     mask = cv2.bitwise_or(mask1, mask2)
     
     red_pixels = cv2.countNonZero(mask)
@@ -64,40 +62,48 @@ def isolate_sides_mask(frame, side_width):
 
     return left_side, right_side
 
+
+def check_debounce(debounce, timestamp):
+    
+    delta = datetime.timedelta(minutes=4)
+    if len(debounce) == 0:
+        return True
+    if timestamp - debounce[0] >= delta:
+        return True
+    return False
+
 def main():
-    template = cv2.imread('./smaller_warning.png', cv2.IMREAD_COLOR_BGR )
+    template = cv2.imread('./smaller_warning.png' )
     template_mask = cv2.inRange(template, lower_red, upper_red)
     template = cv2.bitwise_and(template, template, mask = template_mask)
-    # template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY )
-
-    # template_width, template_height = template.shape
-    # template = cv2.resize(template, (720, 576))
+    
+    debounce = []
+    
     captured_frames = cv2.VideoCapture('./league.mp4')
     backsub = cv2.createBackgroundSubtractorMOG2()
     while True:
 
         frame_bool, frame = captured_frames.read()
 
+        timestamp = datetime.datetime.now()
+        
+
         if frame is None:
             print('error reading frame')
             break
         frame = frame.astype(np.uint8)
-        # gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # print("template", template.shape)
-        # print("frame", frame.shape)
         
         # resize to a smaller resolution so that we can process the frames faster
         downsized = cv2.resize(frame, (768, 364))
-        # downsized = cv2.cvtColor(downsized, cv2.COLOR_BGR2RGB)
-        #
-        # downsized = cv2.cvtColor(downsized, cv2.COLOR_BGR2GRAY)
         top, bottom  = isolate_top_bottom(downsized, 30)
         is_red = isolate_red(top, red_threshold=0.32)
         
-        if is_red == True:
-            print("taking damage!")
-        # testing = backsub.apply(top)
-
+        if is_red == True and check_debounce(debounce, timestamp):
+            if len(debounce) == 0:
+                debounce.append(timestamp)
+                playsound("metal-pipe-clang.mp3")
+            else:
+                debounce.pop()  
 
     # Display the resulting frame
         cv2.imshow('Detected Objects',top)
