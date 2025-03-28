@@ -25,6 +25,8 @@ def isolate_red (frame, red_threshold):
 
     # Calculate proportion
     red_proportion = red_pixels / total_pixels
+    
+    print(red_proportion)
 
     return red_proportion >= red_threshold
     
@@ -79,7 +81,8 @@ def main():
     
     debounce = []
     
-    captured_frames = cv2.VideoCapture('./league.mp4')
+    # captured_frames = cv2.VideoCapture('./league.mp4')
+    captured_frames = cv2.VideoCapture(2)  
     backsub = cv2.createBackgroundSubtractorMOG2()
     while True:
 
@@ -96,10 +99,11 @@ def main():
         # resize to a smaller resolution so that we can process the frames faster
         downsized = cv2.resize(frame, (768, 364))
         top, bottom  = isolate_top_bottom(downsized, 30)
-        is_red = isolate_red(top, red_threshold=0.32)
-        
+        is_red = isolate_red(top, red_threshold=0.030)
+        print(is_red) 
         if is_red == True and check_debounce(debounce, timestamp):
             if len(debounce) == 0:
+                print("damage Detected")
                 debounce.append(timestamp)
                 playsound("metal-pipe-clang.mp3")
             else:
