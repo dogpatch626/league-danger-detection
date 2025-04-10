@@ -15,13 +15,13 @@ def isolate_red (frame, red_threshold):
     mask2 = cv2.inRange(frame, lower_red2, upper_red2)    
     
     mask = cv2.bitwise_or(mask1, mask2)
-    
+
     red_pixels = cv2.countNonZero(mask)
     total_pixels = frame.shape[0] * frame.shape[1]
 
     # Calculate proportion
     red_proportion = red_pixels / total_pixels
-    
+    # cv2.imshow(mask)
     print(red_proportion)
 
     return red_proportion >= red_threshold

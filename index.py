@@ -28,10 +28,6 @@ def rate_limit(last_used, timestamp):
 with mss() as sct:
     # Part of the screen to capture
     monitor = {"top": 1000, "left": 0, "width": 100, "height": 50}
-    print(sct.monitors)
-    template = cv2.imread('./smaller_warning.png' )
-    template_mask = cv2.inRange(template, lower_red, upper_red)
-    template = cv2.bitwise_and(template, template, mask = template_mask)
     
     last_used = []
     
@@ -42,14 +38,16 @@ with mss() as sct:
         
         # Get raw pixels from the screen, save it to a Numpy array
         img = np.array(sct.grab(monitor))
-                
+        # test through capturing video
+        # img = cv2.VideoCapture("./league.mp4")
+        # downsized = cv2.resize(frame, (768, 364))
         # Display the picture
         cv2.imshow("OpenCV/Numpy normal", img)
 
         
-        top  = isolate_top_bottom(img, 30)
-        left, right = isolate_sides_mask(top, 30 )
-        is_red = isolate_red(top, red_threshold=0.10)
+        # top  = isolate_top_bottom(img, 30)
+        # left, right = isolate_sides_mask(top, 30 )
+        is_red = isolate_red(img, red_threshold=0.10)
         print(is_red) 
         if is_red == True and rate_limit(last_used, last_time):
             if len(last_used) == 0:
